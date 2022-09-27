@@ -2,9 +2,7 @@ const BooksModel = require('../models/BooksModel')
 const userModel = require('../models/UserModel');
 const ObjectId = require('mongoose').Types.ObjectId
 const ReviewModel = require('../models/ReviewModel')
-
-
-
+ 
 
 //=======================CreateBooks==============================================
 
@@ -13,6 +11,7 @@ const createBooks = async function (req, res) {
     try {
         let data = req.body
         let { title, excerpt, userId, ISBN, category, subcategory, releasedAt } = data
+        
 
         if (!(title))
             return res.status(400).send({ status: false, message: "Please enter  title" });
@@ -60,10 +59,10 @@ const createBooks = async function (req, res) {
 
 //=========================Get All Books===========================================
 
-const getBooks = async function(req, res) {
+const getBooks = async function (req, res) {
     try {
         let queries = req.query;
-        if (queries.userId){
+        if (queries.userId) {
             if (!ObjectId.isValid(queries.userId)) { return res.status(400).send({ status: false, message: "Please enter Correct userId." }) }
         }
         let allBooks = await BooksModel.find({ $and: [queries, { isDeleted: false }] }).select({ title: 1, excerpt: 1, userId: 1, category: 1, releasedAt: 1, reviews: 1 }).sort({ title: 1 });
@@ -83,14 +82,14 @@ const getBooksById = async function (req, res) {
         if (!ObjectId.isValid(bookId)) return res.status(400).send({ status: false, msg: "Please give a Valid bookId " })
 
         let allBooks = await BooksModel.findById({ _id: bookId }).lean()
-        if(!allBooks)
-        return res.status(404).send({ status: false, msg: "Books not found with this Id" })
-     
+        if (!allBooks)
+            return res.status(404).send({ status: false, msg: "Books not found with this Id" })
+
         if (allBooks.isDeleted == true)
             return res.status(404).send({ status: false, msg: "Book deleted" })
-           
-        let reviewData = await ReviewModel.find({_id:bookId})
-        allBooks['reviewsData'] =  reviewData
+
+        let reviewData = await ReviewModel.find({ _id: bookId })
+        allBooks['reviewsData'] = reviewData
         res.status(200).send({ status: true, data: allBooks })
     }
     catch (err) {
@@ -113,18 +112,19 @@ const updateBookById = async function (req, res) {
 
         let details = req.body
         if (Object.keys(details).length == 0) return res.status(400).send({ status: false, msg: "Please give Details in body" })
-        if(details.title || details.title == null){
-        if(!(/^[a-zA-Z]+([\s][a-zA-Z]+)*$/.test(details.title))) return res.status(400).send({ status: false, msg: "please update with correct title" })
-        let checkDatainDb = await BooksModel.findOne({ title: details.title })
-        if (checkDatainDb) return res.status(400).send({ status: false, msg: "title is already used" })}
-        let bookIsbnInDb = await BooksModel.findOne({ ISBN: details.ISBN,isDeleted:fa})
+        if (details.title || details.title == null) {
+            if (!(/^[a-zA-Z]+([\s][a-zA-Z]+)*$/.test(details.title))) return res.status(400).send({ status: false, msg: "please update with correct title" })
+            let checkDatainDb = await BooksModel.findOne({ title: details.title })
+            if (checkDatainDb) return res.status(400).send({ status: false, msg: "title is already used" })
+        }
+        let bookIsbnInDb = await BooksModel.findOne({ ISBN: details.ISBN, isDeleted: fa })
         if (bookIsbnInDb)
             return res.status(400).send({ status: false, msg: "ISBN is already used" })
 
         const updatedBook = await BooksModel.findOneAndUpdate({ _id: bookId },
             { $set: { title: details.title, excerpt: details.excerpt, releasedAt: details.releasedAt, ISBN: details.ISBN } },
             { new: true })
-        return res.status(200).send({ status: true,msg:success, data:updatedBook })
+        return res.status(200).send({ status: true, msg: success, data: updatedBook })
     }
     catch (err) {
         res.status(500).send({ status: "error", error: err.message })
@@ -155,5 +155,5 @@ const BooksDeleteById = async function (req, res) {
 }
 
 
-module.exports = {createBooks,getBooks,getBooksById,updateBookById,BooksDeleteById}
+module.exports = { createBooks, getBooks, getBooksById, updateBookById, BooksDeleteById }
 
